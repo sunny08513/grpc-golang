@@ -40,7 +40,7 @@ GRPC
 8. Error Handling:
    - Uses its own status codes and metadata to provide more detailed error information.
 
-
+```
 Feature	            REST API	            gRPC
 Protocol	         HTTP/1.1 or HTTP/2	        HTTP/2
 Data Format	         JSON, XML, HTML, etc.	    Protocol Buffers (protobuf)
@@ -53,6 +53,7 @@ Strong Typing	     No	                        Yes
 Tooling	             Wide support, easy to use	Requires specific tools and libraries
 Error Handling	     HTTP status codes	        gRPC status codes and metadata
 Use Cases	         Web APIs, public APIs	    Microservices, real-time communication
+```
 
 Use REST if:
     You need wide accessibility and ease of use, especially for public APIs.
@@ -88,3 +89,56 @@ Key Aspects of Data Integrity
     1. Accuracy: Data should be correct and free from errors.
     2. Consistency: Data should be uniform and consistent across different systems and instances.
     3. Reliability: Data should be reliable and usable for its intended purpose without being compromised or altered unintentionally.
+
+#####################
+
+Setting Up gRPC in Golang
+1. Install gRPC and Protocol Buffers
+```
+# Install Protocol Buffers compiler (protoc)
+brew install protobuf
+
+# Install the Go plugins for the Protocol Buffers compiler
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+# Make sure the binaries are in your PATH
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+2. Define the Protobuf File
+Create a .proto file that defines your gRPC service and messages. For example, let's create a simple calculator service.
+
+```
+syntax = "proto3";
+
+package calculator;
+
+option go_package = "github.com/yourusername/yourproject/calculator";
+
+service Calculator {
+  rpc Sum (SumRequest) returns (SumResponse);
+}
+
+message SumRequest {
+  int32 a = 1;
+  int32 b = 2;
+}
+
+message SumResponse {
+  int32 result = 1;
+}
+```
+
+3. Generate Go Code from the Protobuf File
+- Use the protoc compiler to generate Go code from your .proto file.
+```
+protoc --go_out=. --go-grpc_out=. calculator.proto
+```
+
+This will generate two files: calculator.pb.go and calculator_grpc.pb.go.
+
+4. Implement the Server
+   Create a main.go file inside the calculator/server directory: 
+
+5. Implement the Client
+   Create a main.go file inside the client directory:
