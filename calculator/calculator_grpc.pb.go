@@ -19,14 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Calculator_Sum_FullMethodName = "/calculator.Calculator/Sum"
+	Calculator_Sum_FullMethodName       = "/calculator.Calculator/Sum"
+	Calculator_Multiply_FullMethodName  = "/calculator.Calculator/Multiply"
+	Calculator_GetPrimes_FullMethodName = "/calculator.Calculator/GetPrimes"
 )
 
 // CalculatorClient is the client API for Calculator service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CalculatorClient interface {
-	Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
+	Sum(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	Multiply(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	GetPrimes(ctx context.Context, in *PrimeRequest, opts ...grpc.CallOption) (Calculator_GetPrimesClient, error)
 }
 
 type calculatorClient struct {
@@ -37,8 +41,8 @@ func NewCalculatorClient(cc grpc.ClientConnInterface) CalculatorClient {
 	return &calculatorClient{cc}
 }
 
-func (c *calculatorClient) Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error) {
-	out := new(SumResponse)
+func (c *calculatorClient) Sum(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
 	err := c.cc.Invoke(ctx, Calculator_Sum_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,11 +50,54 @@ func (c *calculatorClient) Sum(ctx context.Context, in *SumRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *calculatorClient) Multiply(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, Calculator_Multiply_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *calculatorClient) GetPrimes(ctx context.Context, in *PrimeRequest, opts ...grpc.CallOption) (Calculator_GetPrimesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Calculator_ServiceDesc.Streams[0], Calculator_GetPrimes_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &calculatorGetPrimesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Calculator_GetPrimesClient interface {
+	Recv() (*PrimeResponse, error)
+	grpc.ClientStream
+}
+
+type calculatorGetPrimesClient struct {
+	grpc.ClientStream
+}
+
+func (x *calculatorGetPrimesClient) Recv() (*PrimeResponse, error) {
+	m := new(PrimeResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalculatorServer is the server API for Calculator service.
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
 type CalculatorServer interface {
-	Sum(context.Context, *SumRequest) (*SumResponse, error)
+	Sum(context.Context, *Request) (*Response, error)
+	Multiply(context.Context, *Request) (*Response, error)
+	GetPrimes(*PrimeRequest, Calculator_GetPrimesServer) error
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -58,8 +105,14 @@ type CalculatorServer interface {
 type UnimplementedCalculatorServer struct {
 }
 
-func (UnimplementedCalculatorServer) Sum(context.Context, *SumRequest) (*SumResponse, error) {
+func (UnimplementedCalculatorServer) Sum(context.Context, *Request) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Sum not implemented")
+}
+func (UnimplementedCalculatorServer) Multiply(context.Context, *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Multiply not implemented")
+}
+func (UnimplementedCalculatorServer) GetPrimes(*PrimeRequest, Calculator_GetPrimesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetPrimes not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
 
@@ -75,7 +128,7 @@ func RegisterCalculatorServer(s grpc.ServiceRegistrar, srv CalculatorServer) {
 }
 
 func _Calculator_Sum_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SumRequest)
+	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -87,9 +140,48 @@ func _Calculator_Sum_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: Calculator_Sum_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CalculatorServer).Sum(ctx, req.(*SumRequest))
+		return srv.(CalculatorServer).Sum(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _Calculator_Multiply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServer).Multiply(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Calculator_Multiply_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServer).Multiply(ctx, req.(*Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Calculator_GetPrimes_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PrimeRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CalculatorServer).GetPrimes(m, &calculatorGetPrimesServer{stream})
+}
+
+type Calculator_GetPrimesServer interface {
+	Send(*PrimeResponse) error
+	grpc.ServerStream
+}
+
+type calculatorGetPrimesServer struct {
+	grpc.ServerStream
+}
+
+func (x *calculatorGetPrimesServer) Send(m *PrimeResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // Calculator_ServiceDesc is the grpc.ServiceDesc for Calculator service.
@@ -103,7 +195,17 @@ var Calculator_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Sum",
 			Handler:    _Calculator_Sum_Handler,
 		},
+		{
+			MethodName: "Multiply",
+			Handler:    _Calculator_Multiply_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetPrimes",
+			Handler:       _Calculator_GetPrimes_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "calculator/calculator.proto",
 }

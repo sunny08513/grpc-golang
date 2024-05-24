@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"log"
+	"math"
 	"net"
 
 	pb "grpc-golang/calculator"
@@ -15,9 +16,36 @@ type server struct {
 	pb.UnimplementedCalculatorServer
 }
 
-func (s *server) Sum(ctx context.Context, req *pb.SumRequest) (*pb.SumResponse, error) {
+func (s *server) Sum(ctx context.Context, req *pb.Request) (*pb.Response, error) {
 	result := req.GetA() + req.GetB()
-	return &pb.SumResponse{Result: result}, nil
+	return &pb.Response{Result: result}, nil
+}
+
+func (s *server) Multiply(ctx context.Context, req *pb.Request) (*pb.Response, error) {
+	result := req.GetA() * req.GetB()
+	return &pb.Response{Result: result}, nil
+}
+
+func (s *server) GetPrimes(req *pb.PrimeRequest, stream pb.Calculator_GetPrimesServer) error {
+	number := req.GetN()
+	for i := 2; i <= int(number); i++ {
+		if isPrime(i) {
+			stream.Send(&pb.PrimeResponse{Result: int32(i)})
+		}
+	}
+	return nil
+}
+
+func isPrime(n int) bool {
+	if n <= 1 {
+		return false
+	}
+	for i := 2; i <= int(math.Sqrt(float64(n))); i++ {
+		if n%i == 0 {
+			return false
+		}
+	}
+	return true
 }
 
 func main() {

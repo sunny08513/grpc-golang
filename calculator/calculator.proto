@@ -5,14 +5,24 @@ package calculator;
 option go_package = "/calculator";
 
 service Calculator {
-  rpc Sum (SumRequest) returns (SumResponse);
+  rpc Sum (Request) returns (Response);
+  rpc Multiply(Request) returns(Response);
+  rpc GetPrimes(PrimeRequest) returns (stream PrimeResponse);
 }
 
-message SumRequest {
+message Request {
   int32 a = 1;
   int32 b = 2;
 }
 
-message SumResponse {
+message Response {
+  int32 result = 1;
+}
+
+message PrimeRequest {
+  int32 n = 1;
+}
+
+message PrimeResponse {
   int32 result = 1;
 }
