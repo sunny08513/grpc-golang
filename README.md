@@ -1,5 +1,7 @@
 # grpc-golang
 
+gRPC is an open-source framework developed by Google that enables efficient communication between distributed systems
+
 Rest API(Representational State Transfer Application Programming Interface) vs GRPC(gRPC Remote Procedure Calls))
 
 Rest API  
@@ -92,7 +94,7 @@ Key Aspects of Data Integrity
 
 #####################
 
-Setting Up gRPC in Golang
+# Setting Up gRPC in Golang
 1. Install gRPC and Protocol Buffers
 ```
 # Install Protocol Buffers compiler (protoc)
@@ -142,3 +144,26 @@ This will generate two files: calculator.pb.go and calculator_grpc.pb.go.
 
 5. Implement the Client
    Create a main.go file inside the client directory:
+
+
+
+# Error Handling in grpc
+
+Error handling in gRPC is an important aspect of building robust and reliable services. gRPC uses standard HTTP/2 error codes and provides mechanisms to send detailed error information from the server to the client. This allows clients to handle errors appropriately based on the context.
+
+1. Status Codes: gRPC uses a set of predefined status codes that are similar to HTTP status codes. Some common ones include:
+```
+OK (0): No error.
+CANCELLED (1): The operation was cancelled.
+UNKNOWN (2): Unknown error.
+INVALID_ARGUMENT (3): Client specified an invalid argument.
+DEADLINE_EXCEEDED (4): Deadline expired before operation could complete.
+NOT_FOUND (5): Some requested entity was not found.
+ALREADY_EXISTS (6): Some entity that we attempted to create already exists.
+PERMISSION_DENIED (7): The caller does not have permission to execute the specified operation.
+```
+
+2. Error Details: gRPC errors can carry additional details beyond the status code using the google.golang.org/grpc/status package. This allows for more informative error messages and richer error handling.
+
+# Interview Questions
+https://techwasti.com/25-grpc-interview-questions-and-answers-for-developers
